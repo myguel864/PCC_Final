@@ -39,7 +39,7 @@ df_cine = pd.read_excel('PCC_BASE DE DATOS_FINAL.xlsx')
 # Generamos una página principal, otra donde contaran su experiencia aprendiendo a programar y una tercera donde presentarán sus gráficos.
 
 # Creamos la lista de páginas
-paginas = ['Inicio', 'Gráficos']
+paginas = ['Inicio', 'Catálogo']
 
 # Creamos botones de navegación tomando la lista de páginas
 pagina_seleccionada = st.sidebar.selectbox('Selecciona una página', paginas)
@@ -84,13 +84,9 @@ if pagina_seleccionada == 'Inicio':
     # ¿Qué te gustaría hacer en el futuro?, ¿Qué te gusta hacer en tu tiempo libre?
 
     texto = """
-    Aquí escribe una presentación creativa sobre ti.
-    ¿Quién eres?, 
-    ¿De dónde eres?, 
-    ¿Qué estudias?, 
-    ¿Qué te gusta de tu carrera?, 
-    ¿Qué te gustaría hacer en el futuro?, 
-    ¿Qué te gusta hacer en tu tiempo libre?
+    \n\nBienvenid@ a Escena Cero, una nueva forma de ver películas.\n\nEscena Cero es un buscador y catálogo de películas diferente. Aquí no buscaras una película por género, director o año, si no por las palabras más repetidas en sus respectivos guiones. Al insertar una palabra la página te mostrará aquella película en la que se repite más con información relevante sobre esta en la que se incluye la relacionada con el mundo del guión cinematográfico.\n\nSi esa idea no te convence siempre puedes ir a nuestro Catálogo de películas y seleccionar la que más te llame la atención. Desde ahí también podrás visualizar toda la información anterior.\n\nEste proyecto nació de mi particular forma de ver películas. Usualmente estamos acostumbrados a ver trailers, leer sinopsis y reseñas sobre una película antes de verla. Este bombardeo de información siempre me pareció que le quitaba la emoción al ver una nueva película. Es por ello que suelo ver películas sin tener mucha información sobre ellas, a excepción de a qué género pertenecen o quienes las realizaron
+    \n\nAnimate a ver películas de una manera diferente o a descubrir curiosidades sobre tus largometrajes favoritos. 
+    \n\nPrueba a usar alguna de las siguientes palabras: girl, love, walks, office, something, floor, building, elevator, gun, police, ring, suddenly, fellowship, hobbits, sword, music, old, jazz, playing, smiles, mother, door, cat, father, ghost, president, general, alien, attacker, ship, detective, see, man, apartment, street, cabin, camp, lake, behind, runs, white, horse, black, nigger, slave, mr, mrs, miss, lady, sister. 
     """
 
     # Las comillas triples (""") en Python se utilizan para definir cadenas multilínea.
@@ -98,7 +94,7 @@ if pagina_seleccionada == 'Inicio':
     # Mostramos el texto
     st.markdown(f"<div style='text-align: justify; font-size: 15px;'>{texto}</div>", unsafe_allow_html=True)
 
-    st.markdown("<h1 style='text-align: center;'>Buscador de película</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>Buscador de película</h3>", unsafe_allow_html=True)
 
 
     # Entrada de búsqueda
@@ -129,15 +125,16 @@ if pagina_seleccionada == 'Inicio':
             if busqueda.lower() in palabras.lower():
                 encontrado = True
                 st.subheader(f"Resultados encontrados para '{busqueda}':")
-                st.write(f"**{nombre}** - Calificación en IMDb: {clasificacion}")
-                st.write(f"Director(a): {director} - Año de estreno: {año} - Duración: {minutos} minutos")
-                st.write(f"Etiquetas: {etiquetas} - Certificación: {certificacion}")
-                st.write(f"Guionista(s): {guionista}")
-                st.write(f"Palabras más utilizadas: {palabras}")
-                st.write(f"Personajes más mencionados: {personajes}")
-                st.write(f"Escenas en interiores: {interior} - Escenas en exteriores: {exterior}")
-                st.write(f"Escenas de día: {dia} - Escenas de noche: {noche}")
-                st.image(imagen, width=300)
+                st.image(imagen, width=800)
+                st.subheader(f'{nombre}')
+                st.write(f"**Clasificación IMDb:** {clasificacion}")
+                st.write(f"**Director(a):** {director} - **Año de estreno:** {año} - **Duración:** {minutos} minutos")
+                st.write(f"**Etiquetas:** {etiquetas} - **Certificación:** {certificacion}")
+                st.write(f"**Guionista(s):** {guionista}")
+                st.write(f"**Palabras más utilizadas:** {palabras}")
+                st.write(f"**Personajes más mencionados:** {personajes}")
+                st.write(f"**Escenas en interiores:** {interior} - **Escenas en exteriores:** {exterior}")
+                st.write(f"**Escenas de día:** {dia} - **Escenas de noche:** {noche}")
                 break
         
         # Si no se encontró nada
@@ -156,7 +153,7 @@ if pagina_seleccionada == 'Inicio':
 else:
 
     # Agregamos un título para la página de gráficos
-    st.markdown("<h1 style='text-align: center;'>Catalogo</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>Catálogo</h1>", unsafe_allow_html=True)
 
     if 'selected_movie' not in st.session_state:
         st.session_state.selected_movie = None
@@ -164,24 +161,28 @@ else:
     # Mostrar las portadas como botones
     col1, col2, col3 = st.columns(3)
 
+    col2.markdown(f"<div style='text-align: justify; font-size: 15px;'>Elige una película:</div>", unsafe_allow_html=True)
+
     for i, row in df_cine.iterrows():
         # Usamos una columna para cada imagen de portada
-        with col1:
+        with col2:
             if st.button(f"Ver detalles de {row['TITULO']}", key=row['TITULO']):
                 st.session_state.selected_movie = i
                 break
+
+      
 
     # Mostrar los detalles de la película seleccionada
     if st.session_state.selected_movie is not None:
         movie = df_cine.iloc[st.session_state.selected_movie]
         
-        st.image(movie['IMAGEN'], width=300)
+        st.image(movie['IMAGEN'], width=800)
         st.subheader(movie['TITULO'])
+        st.write(f"**Clasificación IMDb:** {movie['CLASIFICACION']}")
         st.write(f"**Director(a):** {movie['DIRECTOR']}")
         st.write(f"**Guionista(s):** {movie['GUIONISTA']}")
         st.write(f"**Año de estreno:** {movie['AÑO DE ESTRENO']}")
         st.write(f"**Duración:** {movie['DURACION']} minutos")
-        st.write(f"**Clasificación IMDb:** {movie['CLASIFICACION']}")
         st.write(f"**Certificación:** {movie['CERTIFICACION']}")
         st.write(f"**Etiquetas:** {movie['ETIQUETAS']}")
         st.write(f"**Palabras más utilizadas:** {movie['PALABRAS REPETIDAS']}")
@@ -192,4 +193,5 @@ else:
         # Opción para volver al listado de películas
         if st.button("Volver al listado"):
             st.session_state.selected_movie = None
+            st.rerun()
     
