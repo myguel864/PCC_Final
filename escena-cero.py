@@ -2,6 +2,27 @@
 import streamlit as st
 import pandas as pd
 from IPython.display import display_html
+import plotly.express as px
+
+def parse_personajes(personaje_str):
+    personajes = {}
+    try:
+        for parte in personaje_str.split(","):
+            nombre, conteo = parte.strip().split(":")
+            personajes[nombre.strip()] = int(conteo.strip())
+    except:
+        pass
+    return personajes
+
+def parse_palabras(palabra_str):
+    palabras = {}
+    try:
+        for parte in palabra_str.split(","):
+            palabra, conteo = parte.strip().split(":")
+            palabras[palabra.strip()] = int(conteo.strip())
+    except:
+        pass
+    return palabras
 
 # transformo mi base de datos en un dataframe
 df_cine = pd.read_excel('PCC_BASE DE DATOS_FINAL.xlsx')
@@ -84,9 +105,50 @@ if pagina_seleccionada == 'Inicio':
                 st.write(f"**Etiquetas:** {etiquetas} - **Certificación:** {certificacion}")
                 st.write(f"**Guionista(s):** {guionista}")
                 st.write(f"**Palabras más utilizadas:** {palabras}")
+
+                palabras_dict = parse_palabras(palabras)
+                if palabras_dict:
+                    df_palabras = pd.DataFrame({
+                        "Palabra": list(palabras_dict.keys()),
+                        "Repeticiones": list(palabras_dict.values())
+                    }).sort_values(by="Repeticiones", ascending=False)
+
+                fig = px.bar(df_palabras, 
+                            x="Palabra", 
+                            y="Repeticiones", 
+                            title="Palabras más repetidas en el guion",
+                            color="Palabra",
+                            labels={"Palabra": "Palabra", "Repeticiones": "Cantidad"},
+                            height=400)
+                
+                st.plotly_chart(fig)
+
                 st.write(f"**Personajes más mencionados:** {personajes}")
+
+                personajes_dict = parse_personajes(personajes)
+                if personajes_dict:
+                    df_personajes = pd.DataFrame({
+                        "Personaje": list(personajes_dict.keys()),
+                        "Menciones": list(personajes_dict.values())
+                    })
+
+                    fig = px.pie(df_personajes, 
+                        names="Personaje", 
+                        values="Menciones",
+                        title="Distribución de personajes mencionados",
+                        hole=0.4)
+
+                    st.plotly_chart(fig)
+
                 st.write(f"**Escenas en interiores:** {interior} - **Escenas en exteriores:** {exterior}")
                 st.write(f"**Escenas de día:** {dia} - **Escenas de noche:** {noche}")
+                escena_data = {
+                    "Tipo de Escena": ["Interiores", "Exteriores", "Día", "Noche"],
+                    "Cantidad": [interior, exterior, dia, noche]
+                }
+                df_escenas = pd.DataFrame(escena_data)
+                fig = px.bar(df_escenas, x="Tipo de Escena", y="Cantidad", color="Tipo de Escena", title="Distribución de tipos de escenas")
+                st.plotly_chart(fig)
                 break
         
         # si la palabra no es encuentra en la columna PALABRAS REPETIDAS muestro un texto
@@ -139,9 +201,50 @@ else:
         st.write(f"**Certificación:** {movie['CERTIFICACION']}")
         st.write(f"**Etiquetas:** {movie['ETIQUETAS']}")
         st.write(f"**Palabras más utilizadas:** {movie['PALABRAS REPETIDAS']}")
+
+        palabras_dict = parse_palabras(movie["PALABRAS REPETIDAS"])
+        if palabras_dict:
+            df_palabras = pd.DataFrame({
+                "Palabra": list(palabras_dict.keys()),
+                "Repeticiones": list(palabras_dict.values())
+            }).sort_values(by="Repeticiones", ascending=False)
+
+            fig = px.bar(df_palabras, 
+                        x="Palabra", 
+                        y="Repeticiones", 
+                        title="Palabras más repetidas en el guion",
+                        color="Palabra",
+                        labels={"Palabra": "Palabra", "Repeticiones": "Cantidad"},
+                        height=400)
+            
+            st.plotly_chart(fig)
+
         st.write(f"**Personajes más mencionados:** {movie['PERSONAJE REPETIDO']}")
+
+        personajes_dict = parse_personajes(movie["PERSONAJE REPETIDO"])
+        if personajes_dict:
+            df_personajes = pd.DataFrame({
+                "Personaje": list(personajes_dict.keys()),
+                "Menciones": list(personajes_dict.values())
+            })
+
+        fig = px.pie(df_personajes, 
+                    names="Personaje", 
+                    values="Menciones",
+                    title="Distribución de personajes mencionados",
+                    hole=0.4)
+
+        st.plotly_chart(fig)
+
         st.write(f"**Escenas en interiores:** {movie['INT']} - **Escenas en exteriores:** {movie['EXT']}")
         st.write(f"**Escenas de día:** {movie['DAY']} - **Escenas de noche:** {movie['NIGHT']}")
+        escena_data = {
+            "Tipo de Escena": ["Interiores", "Exteriores", "Día", "Noche"],
+            "Cantidad": [movie['INT'], movie['EXT'], movie['DAY'], movie['NIGHT']]
+        }
+        df_escenas = pd.DataFrame(escena_data)
+        fig = px.bar(df_escenas, x="Tipo de Escena", y="Cantidad", color="Tipo de Escena", title="Distribución de tipos de escenas")
+        st.plotly_chart(fig)
         
         # creo un botón para volver al catálogo
         if st.button("Volver al listado"):
