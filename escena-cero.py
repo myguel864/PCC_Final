@@ -4,25 +4,37 @@ import pandas as pd
 from IPython.display import display_html
 import plotly.express as px
 
-def parse_personajes(personaje_str):
+
+# convierto los datos de la columna PERSONAJES REPETIDOS en diccionarios
+# defino una función  
+def procesar_personajes(personaje_str):
+
+    # creo un diccionario vacío donde almacenar la información
     personajes = {}
-    try:
-        for parte in personaje_str.split(","):
-            nombre, conteo = parte.strip().split(":")
-            personajes[nombre.strip()] = int(conteo.strip())
-    except:
-        pass
+    
+    # divido el string en comas y luego itero sobre cada parte 
+    for parte in personaje_str.split(","):
+
+        # elimino espacios vacíos y separo el string en nombre y cantidad
+        nombre, conteo = parte.strip().split(":")
+
+        # limpio el número y lo convierto en int
+        personajes[nombre] = int(conteo.strip())
+    
     return personajes
 
-def parse_palabras(palabra_str):
+# repito el proceso
+def procesar_palabras(palabra_str):
     palabras = {}
-    try:
-        for parte in palabra_str.split(","):
-            palabra, conteo = parte.strip().split(":")
-            palabras[palabra.strip()] = int(conteo.strip())
-    except:
-        pass
+
+    for parte in palabra_str.split(","):
+        palabra, conteo = parte.strip().split(":")
+        palabras[palabra] = int(conteo.strip())
+
     return palabras
+
+# defino la paleta de colores que usaré en los gráficos
+colores = px.colors.qualitative.Antique
 
 # transformo mi base de datos en un dataframe
 df_cine = pd.read_excel('PCC_BASE DE DATOS_FINAL.xlsx')
@@ -104,50 +116,102 @@ if pagina_seleccionada == 'Inicio':
                 st.write(f"**Director(a):** {director} - **Año de estreno:** {año} - **Duración:** {minutos} minutos")
                 st.write(f"**Etiquetas:** {etiquetas} - **Certificación:** {certificacion}")
                 st.write(f"**Guionista(s):** {guionista}")
-                st.write(f"**Palabras más utilizadas:** {palabras}")
 
-                palabras_dict = parse_palabras(palabras)
-                if palabras_dict:
+                # convierto en un dataframe el diccionarios que contiene las palabras más repetidas para luego transformarlo en un gráfico
+
+                # creo una variable
+                palabras_grafico = procesar_palabras(palabras)
+
+                if palabras_grafico:
+
+                    # creo el dataframe
                     df_palabras = pd.DataFrame({
-                        "Palabra": list(palabras_dict.keys()),
-                        "Repeticiones": list(palabras_dict.values())
-                    }).sort_values(by="Repeticiones", ascending=False)
 
-                fig = px.bar(df_palabras, 
-                            x="Palabra", 
-                            y="Repeticiones", 
-                            title="Palabras más repetidas en el guion",
-                            color="Palabra",
-                            labels={"Palabra": "Palabra", "Repeticiones": "Cantidad"},
-                            height=400)
+                        # denomino los nombres de las columnas y de donde obtener sus valores
+                        "Palabra": list(palabras_grafico.keys()),
+                        "Repeticiones": list(palabras_grafico.values())
+
+                        # ordeno los valores
+                    }).sort_values(by="Repeticiones", ascending=False)
                 
+                    # creo un gráfico de barras
+                    fig = px.bar(df_palabras, 
+                                x="Palabra", 
+                                y="Repeticiones", 
+                                title="Palabras más repetidas en el guion",
+                                color="Palabra",
+                                color_discrete_sequence=colores,
+                                labels={"Palabra": "Palabra", "Repeticiones": "Cantidad"},
+                                height=400)
+                    
+                    # configuro la fuente del gráfico y sus colores
+                    fig.update_layout(
+                        font=dict(family="Courier New, Courier", size=14, color="#000000"),
+                        title_font=dict(family="Courier New, Courier", size=18, color="#333333"),
+                        legend_font=dict(family="Courier New, Courier", size=12, color="#444444")
+                    )
+                
+                # muestro el gráfico
                 st.plotly_chart(fig)
 
-                st.write(f"**Personajes más mencionados:** {personajes}")
+                # convierto en un dataframe el diccionarios que contiene las palabras más repetidas para luego transformarlo en un gráfico
 
-                personajes_dict = parse_personajes(personajes)
-                if personajes_dict:
+                # creo una variable
+                personajes_grafico = procesar_personajes(personajes)
+
+                if personajes_grafico:
+
+                    # creo el dataframe
                     df_personajes = pd.DataFrame({
-                        "Personaje": list(personajes_dict.keys()),
-                        "Menciones": list(personajes_dict.values())
+
+                        # denomino los nombres de las columnas y de donde obtener sus valores
+                        "Personaje": list(personajes_grafico.keys()),
+                        "Menciones": list(personajes_grafico.values())
                     })
 
+                    # creo un gráfico de pastel
                     fig = px.pie(df_personajes, 
                         names="Personaje", 
                         values="Menciones",
                         title="Distribución de personajes mencionados",
+                        color_discrete_sequence=colores,
                         hole=0.4)
+                    
+                    # configuro la fuente del gráfico y sus colores
+                    fig.update_layout(
+                        font=dict(family="Courier New, Courier", size=14, color="#000000"),
+                        title_font=dict(family="Courier New, Courier", size=18, color="#333333"),
+                        legend_font=dict(family="Courier New, Courier", size=12, color="#444444")
+                    )
 
-                    st.plotly_chart(fig)
+                # muestro el gráfico
+                st.plotly_chart(fig)
 
-                st.write(f"**Escenas en interiores:** {interior} - **Escenas en exteriores:** {exterior}")
-                st.write(f"**Escenas de día:** {dia} - **Escenas de noche:** {noche}")
+                # creo un nuevo diccionario para almacenar en un solo lugar la información sobre las columns INT, EXT, DAY y NIGHT
                 escena_data = {
                     "Tipo de Escena": ["Interiores", "Exteriores", "Día", "Noche"],
                     "Cantidad": [interior, exterior, dia, noche]
                 }
+
+                # convierto el diccionario en un dataframe para luego transformarlo en un gráfico
                 df_escenas = pd.DataFrame(escena_data)
-                fig = px.bar(df_escenas, x="Tipo de Escena", y="Cantidad", color="Tipo de Escena", title="Distribución de tipos de escenas")
+
+                # creo un gráfico de barras
+                fig = px.bar(df_escenas, 
+                             x="Tipo de Escena", 
+                             y="Cantidad", 
+                             color="Tipo de Escena", 
+                             color_discrete_sequence=colores,
+                             title="Distribución de tipos de escenas")
+                
+                # configuro la fuente del gráfico y sus colores
+                fig.update_layout(
+                    font=dict(family="Courier New, Courier", size=14, color="#000000"),
+                    title_font=dict(family="Courier New, Courier", size=18, color="#333333"),
+                    legend_font=dict(family="Courier New, Courier", size=12, color="#444444")
+                )
+
+                # muestro el gráfico
                 st.plotly_chart(fig)
                 break
         
@@ -200,50 +264,102 @@ else:
         st.write(f"**Duración:** {movie['DURACION']} minutos")
         st.write(f"**Certificación:** {movie['CERTIFICACION']}")
         st.write(f"**Etiquetas:** {movie['ETIQUETAS']}")
-        st.write(f"**Palabras más utilizadas:** {movie['PALABRAS REPETIDAS']}")
 
-        palabras_dict = parse_palabras(movie["PALABRAS REPETIDAS"])
-        if palabras_dict:
+        # convierto en un dataframe el diccionario que contiene las palabras más repetidas para luego transformarlo en un gráfico
+
+        # creo una variable
+        palabras_grafico = procesar_palabras(movie["PALABRAS REPETIDAS"])
+
+        if palabras_grafico:
+
+            # creo el dataframe
             df_palabras = pd.DataFrame({
-                "Palabra": list(palabras_dict.keys()),
-                "Repeticiones": list(palabras_dict.values())
+
+                # denomino los nombres de las columnas y de donde obtener sus valores
+                "Palabra": list(palabras_grafico.keys()),
+                "Repeticiones": list(palabras_grafico.values())
+
+                # ordeno los valores
             }).sort_values(by="Repeticiones", ascending=False)
 
+            # creo un gráfico de barras
             fig = px.bar(df_palabras, 
                         x="Palabra", 
                         y="Repeticiones", 
                         title="Palabras más repetidas en el guion",
                         color="Palabra",
+                        color_discrete_sequence=colores,
                         labels={"Palabra": "Palabra", "Repeticiones": "Cantidad"},
                         height=400)
             
+            # configuro la fuente del gráfico y sus colores
+            fig.update_layout(
+                font=dict(family="Courier New, Courier", size=14, color="#000000"),
+                title_font=dict(family="Courier New, Courier", size=18, color="#333333"),
+                legend_font=dict(family="Courier New, Courier", size=12, color="#444444")
+            )
+            
+            # muestro el gráfico
             st.plotly_chart(fig)
+        
+         # convierto en un dataframe el diccionarios que contiene las palabras más repetidas para luego transformarlo en un gráfico
 
-        st.write(f"**Personajes más mencionados:** {movie['PERSONAJE REPETIDO']}")
+        # creo una variable
+        personajes_grafico = procesar_personajes(movie["PERSONAJE REPETIDO"])
 
-        personajes_dict = parse_personajes(movie["PERSONAJE REPETIDO"])
-        if personajes_dict:
+        if personajes_grafico:
+
+            # creo el dataframe
             df_personajes = pd.DataFrame({
-                "Personaje": list(personajes_dict.keys()),
-                "Menciones": list(personajes_dict.values())
+
+                # denomino los nombres de las columnas y de donde obtener sus valores
+                "Personaje": list(personajes_grafico.keys()),
+                "Menciones": list(personajes_grafico.values())
             })
 
+        # creo un gráfico de pastel
         fig = px.pie(df_personajes, 
                     names="Personaje", 
                     values="Menciones",
                     title="Distribución de personajes mencionados",
+                    color_discrete_sequence=colores,
                     hole=0.4)
+        
+        # configuro la fuente del gráfico y sus colores
+        fig.update_layout(
+                font=dict(family="Courier New, Courier", size=14, color="#000000"),
+                title_font=dict(family="Courier New, Courier", size=18, color="#333333"),
+                legend_font=dict(family="Courier New, Courier", size=12, color="#444444")
+            )
 
+        # muestro el gráfico
         st.plotly_chart(fig)
 
-        st.write(f"**Escenas en interiores:** {movie['INT']} - **Escenas en exteriores:** {movie['EXT']}")
-        st.write(f"**Escenas de día:** {movie['DAY']} - **Escenas de noche:** {movie['NIGHT']}")
+        # creo un nuevo diccionario para almacenar en un solo lugar la información sobre las columns INT, EXT, DAY y NIGHT
         escena_data = {
             "Tipo de Escena": ["Interiores", "Exteriores", "Día", "Noche"],
             "Cantidad": [movie['INT'], movie['EXT'], movie['DAY'], movie['NIGHT']]
         }
+
+        # convierto el diccionario en un dataframe para luego transformarlo en un gráfico 
         df_escenas = pd.DataFrame(escena_data)
-        fig = px.bar(df_escenas, x="Tipo de Escena", y="Cantidad", color="Tipo de Escena", title="Distribución de tipos de escenas")
+
+        # creo un gráfico de barras
+        fig = px.bar(df_escenas, 
+                     x="Tipo de Escena", 
+                     y="Cantidad", 
+                     color="Tipo de Escena",
+                     color_discrete_sequence=colores, 
+                     title="Distribución de tipos de escenas")
+        
+        # configuro la fuente del gráfico y sus colores
+        fig.update_layout(
+                font=dict(family="Courier New, Courier", size=14, color="#000000"),
+                title_font=dict(family="Courier New, Courier", size=18, color="#000000"),
+                legend_font=dict(family="Courier New, Courier", size=12, color="#000000")
+            )
+        
+        # muestro el gráfico
         st.plotly_chart(fig)
         
         # creo un botón para volver al catálogo
